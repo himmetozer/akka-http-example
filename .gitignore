@@ -1,0 +1,9 @@
+# Ignore all dotfiles...
+.*
+# except
+!.gitignore
+!.editorconfig
+!.scalafmt.conf
+
+# sbt specific
+target/
