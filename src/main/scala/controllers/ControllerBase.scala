@@ -1,9 +1,11 @@
 package controllers
 
+import java.util.concurrent.TimeUnit
+
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.{HttpResponse, ResponseEntity, StatusCodes}
 import akka.http.scaladsl.server.Directive0
-import akka.http.scaladsl.server.Directives.{complete, mapInnerRoute}
+import akka.http.scaladsl.server.Directives.{complete, extractRequestContext, mapInnerRoute, mapResponse}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport._
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
@@ -32,8 +34,15 @@ trait ControllerBase extends DefaultInstrumented {
       HttpResponse(entity = e, status = StatusCodes.InternalServerError)
     })
 
-  def withTimer(timer: Timer): Directive0 =
-    mapInnerRoute(inner => ctx => timer.timeFuture(inner(ctx)))
+  def withTimer(name: String): Directive0 = extractRequestContext.flatMap { _ =>
+    val start = System.currentTimeMillis()
+    mapResponse { response =>
+      val elapsed = System.currentTimeMillis() - start
+      val status = response.status.intValue()
+      metrics.timer(s"$name.$status").update(elapsed, TimeUnit.MILLISECONDS)
+      response
+    }
+  }
 
   implicit def toJson[T: Encoder](m: T): Json = m.asJson
 

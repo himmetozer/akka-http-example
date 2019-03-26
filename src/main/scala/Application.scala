@@ -1,32 +1,21 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import com.typesafe.config.ConfigFactory
-import controllers.{HeartbeatController, TicketController}
-import repositories.{DBContext, TicketRepo}
-import services.TicketService
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-object Application extends App {
+object Application extends App with Components {
 
   implicit val system = ActorSystem("ticketServer")
   implicit val materializer = ActorMaterializer()
-  implicit val executor: ExecutionContext = system.dispatcher
-
-  lazy val config = ConfigFactory.load()
-  lazy val db = new DBContext(config)
-  val ticketRepo = new TicketRepo(db)
-  val ticketService = new TicketService(ticketRepo)
-  val ticketController = new TicketController(ticketService)
-  val heartbeatController = new HeartbeatController()
+  implicit val ec: ExecutionContext = system.dispatcher
 
   val routes = ticketController.route
 
   val servers = for {
     server <- Http().bindAndHandle(routes, "0.0.0.0", 8080)
-    adminServer <- Http().bindAndHandle(heartbeatController.route, "0.0.0.0", 9000)
+    adminServer <- Http().bindAndHandle(adminController.route, "0.0.0.0", 9000)
   } yield {
     (server, adminServer)
   }

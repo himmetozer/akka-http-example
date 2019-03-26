@@ -13,8 +13,8 @@ class TicketRepo(dBContext: DBContext) {
 
   def get(maybeStartId: Option[Long], length: Int): Future[List[Ticket]] = {
     val query = maybeStartId match {
-      case Some(startId) => quote(tickets.filter(_.id >= lift(startId)).take(length))
-      case None => quote(tickets.take(length))
+      case Some(startId) => quote(tickets.filter(_.id >= lift(startId)).take(lift(length)))
+      case None => quote(tickets.take(lift(length)))
     }
 
     run(query)

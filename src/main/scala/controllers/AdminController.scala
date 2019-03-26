@@ -8,7 +8,7 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.dropwizard.DropwizardExports
 import io.prometheus.client.exporter.common.TextFormat
 
-class HeartbeatController() extends ControllerBase {
+class AdminController() extends ControllerBase {
 
   private val p = getClass.getPackage
   private val name = Option(p.getImplementationTitle).getOrElse("Run with java -jar <jar_name>")
